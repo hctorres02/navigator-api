@@ -1,0 +1,20 @@
+{
+    "name": "hctorres02/navigator",
+    "description": "A slim PHP file browser",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Hugo Torres",
+            "email": "hctorres02@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "HCTorres02\\Navigator\\": "src/"
+        }
+    }
+}
