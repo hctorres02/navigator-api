@@ -8,6 +8,7 @@ use HCTorres02\Navigator\Transfer;
 use HCTorres02\Navigator\Viewer;
 
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: https://navigator-ui.gear.host');
 
 $path = urldecode(filter_input(INPUT_GET, 'path') ?? __DIR__);
 $mode = filter_input(INPUT_GET, 'mode');

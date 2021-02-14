@@ -15,7 +15,6 @@ class Browser
         $data->path = realpath($path);
         $data->filter = $filter;
         $data->excluded = $excluded;
-        $data->directory_separator = DIRECTORY_SEPARATOR;
 
         if (Helper::canReadDir($data->path)) {
             $data->entities = self::coordinator($data);
