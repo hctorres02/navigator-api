@@ -6,18 +6,16 @@ use stdClass;
 
 class Viewer
 {
-    public static function get(string $path): string
+    public static function get(string $path): stdClass
     {
         $data = new stdClass;
-        $data->path = realpath($path);
+        $data->path = $path;
 
-        if (Helper::canReadFile($data->path)) {
-            ob_start();
-            $data->contents = file_get_contents($data->path);
-            $data->isWritable = is_writable($data->path);
-            ob_flush();
-        }
+        ob_start();
+        $data->contents = file_get_contents($data->path);
+        $data->isWritable = is_writable($data->path);
+        ob_flush();
 
-        return json_encode($data);
+        return $data;
     }
 }

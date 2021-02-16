@@ -2,27 +2,77 @@
 
 require "vendor/autoload.php";
 
-use HCTorres02\Navigator\Browser;
-use HCTorres02\Navigator\Filter;
-use HCTorres02\Navigator\Transfer;
-use HCTorres02\Navigator\Viewer;
+use HCTorres02\Navigator\{
+    Browser,
+    Helper,
+    Transfer,
+    Viewer,
+    Errors
+};
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: https://navigator-ui.gear.host');
 
-$path = urldecode(filter_input(INPUT_GET, 'path') ?? __DIR__);
-$mode = filter_input(INPUT_GET, 'mode');
+$mode = urldecode(filter_input(INPUT_GET, 'mode'));
+$drive = urldecode(filter_input(INPUT_GET, 'drive'));
+$path = urldecode(filter_input(INPUT_GET, 'path'));
+
+if (!$mode || !$drive) {
+    header("HTTP/1.0 400");
+    echo json_encode(Errors::BAD_REQUEST);
+
+    return;
+}
+
+$pathWrapper = Helper::pathWrapper($drive, $path);
+$realpath = realpath($pathWrapper);
+
+if (!$realpath) {
+    header("HTTP/1.0 404");
+    echo json_encode(Errors::NOT_FOUND);
+
+    return;
+}
 
 switch ($mode) {
     default:
     case 'browser':
-        $filter = Filter::make(filter_input(INPUT_GET, 'filter', FILTER_VALIDATE_INT));
-        echo Browser::fetch($path, $filter);
+        if (!Helper::canReadDir($realpath)) {
+            header("HTTP/1.0 403");
+            echo json_encode(Errors::FORBIDDEN);
+
+            return;
+        }
+
+        $data = Browser::fetch($realpath);
         break;
     case 'viewer':
-        echo Viewer::get($path);
+        if (
+            !Helper::canReadFile($realpath)
+            || !Helper::canViewFile($realpath)
+        ) {
+            header("HTTP/1.0 403");
+            echo json_encode(Errors::FORBIDDEN);
+
+            return;
+        }
+
+        $data = Viewer::get($realpath);
         break;
     case 'download':
-        Transfer::download($path);
+        if (
+            !Helper::canReadFile($realpath)
+            || !Helper::canDownloadFile($realpath)
+        ) {
+            header("HTTP/1.0 403");
+            echo json_encode(Errors::FORBIDDEN);
+
+            return;
+        }
+
+        Transfer::download($realpath);
+        return;
         break;
 }
+
+echo json_encode($data);

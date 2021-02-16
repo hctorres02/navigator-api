@@ -10,17 +10,14 @@ class Browser
         string $path,
         string $filter = NULL,
         array $excluded = ['.']
-    ): string {
+    ): stdClass {
         $data = new stdClass;
-        $data->path = realpath($path);
+        $data->path = $path;
         $data->filter = $filter;
         $data->excluded = $excluded;
+        $data->entities = self::coordinator($data);
 
-        if (Helper::canReadDir($data->path)) {
-            $data->entities = self::coordinator($data);
-        }
-
-        return json_encode($data);
+        return $data;
     }
 
     private static function coordinator(stdClass $data): array
@@ -42,7 +39,7 @@ class Browser
         return $result;
     }
 
-    private static function createEntity(string $name, string $path): object
+    private static function createEntity(string $name, string $path): stdClass
     {
         $realpath = realpath($path . DIRECTORY_SEPARATOR . $name);
 

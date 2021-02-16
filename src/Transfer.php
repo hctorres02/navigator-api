@@ -6,24 +6,22 @@ class Transfer
 {
     public static function download(string $path): void
     {
-        if (Helper::canReadFile($path)) {
-            $filename = basename($path);
-            $filesize = filesize($path);
-            $headers = [
-                'Cache-Control: must-revalidate',
-                'Content-Description: File Transfer',
-                "Content-Disposition: attachment; filename={$filename}",
-                "Content-Length: {$filesize}",
-                'Content-Type: application/octet-stream',
-                'Expires: 0',
-                'Pragma: public',
-            ];
+        $filename = basename($path);
+        $filesize = filesize($path);
+        $headers = [
+            'Cache-Control: must-revalidate',
+            'Content-Description: File Transfer',
+            "Content-Disposition: attachment; filename={$filename}",
+            "Content-Length: {$filesize}",
+            'Content-Type: application/octet-stream',
+            'Expires: 0',
+            'Pragma: public',
+        ];
 
-            foreach ($headers as $key) {
-                header($key);
-            }
-
-            readfile($path);
+        foreach ($headers as $key) {
+            header($key);
         }
+
+        readfile($path);
     }
 }
