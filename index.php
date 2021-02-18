@@ -1,78 +1,80 @@
 <?php
 
-require "vendor/autoload.php";
+require 'vendor/autoload.php';
 
 use HCTorres02\Navigator\{
     Browser,
-    Helper,
+    Entity,
+    Errors,
     Transfer,
     Viewer,
-    Errors
+    Writer,
 };
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: https://navigator-ui.gear.host');
 
-$mode = urldecode(filter_input(INPUT_GET, 'mode'));
+define('GET', 'GET');
+define('POST', 'POST');
+define('PUT', 'PUT');
+define('DELETE', 'DELETE');
+
+$methods = [GET, POST, DELETE, PUT];
+$request_method = filter_input(INPUT_SERVER, 'REQUEST_METHOD');
+
+if (!in_array($request_method, $methods)) {
+    Errors::dispatch(405);
+}
+
 $drive = urldecode(filter_input(INPUT_GET, 'drive'));
 $path = urldecode(filter_input(INPUT_GET, 'path'));
+$download_mode = filter_input(INPUT_GET, 'download', FILTER_VALIDATE_BOOLEAN);
 
-if (!$mode || !$drive) {
-    header("HTTP/1.0 400");
-    echo json_encode(Errors::BAD_REQUEST);
-
-    return;
+if (!$drive) {
+    Errors::dispatch(400);
 }
 
-$pathWrapper = Helper::pathWrapper($drive, $path);
-$realpath = realpath($pathWrapper);
+$entity = new Entity($drive, $path);
 
-if (!$realpath) {
-    header("HTTP/1.0 404");
-    echo json_encode(Errors::NOT_FOUND);
-
-    return;
+if (!$entity->path) {
+    Errors::dispatch(404);
 }
 
-switch ($mode) {
-    default:
-    case 'browser':
-        if (!Helper::canReadDir($realpath)) {
-            header("HTTP/1.0 403");
-            echo json_encode(Errors::FORBIDDEN);
+if (
+    !$entity->isReadable
+    || !$entity->isDownloadable && $download_mode
+    || !$entity->isWritable && $request_method == POST
+) {
+    Errors::dispatch(403);
+}
 
+switch ($request_method) {
+    case GET:
+        if ($download_mode) {
+            Transfer::download($entity->path);
             return;
         }
 
-        $data = Browser::fetch($realpath);
+        $entity->data = $entity->isDir
+            ? Browser::fetch($entity->path)
+            : Viewer::get($entity->path);
+
         break;
-    case 'viewer':
-        if (
-            !Helper::canReadFile($realpath)
-            || !Helper::canViewFile($realpath)
-        ) {
-            header("HTTP/1.0 403");
-            echo json_encode(Errors::FORBIDDEN);
+    case POST:
 
-            return;
-        }
+        // TODO
 
-        $data = Viewer::get($realpath);
         break;
-    case 'download':
-        if (
-            !Helper::canReadFile($realpath)
-            || !Helper::canDownloadFile($realpath)
-        ) {
-            header("HTTP/1.0 403");
-            echo json_encode(Errors::FORBIDDEN);
+    case PUT:
 
-            return;
-        }
+        // TODO
 
-        Transfer::download($realpath);
-        return;
+        break;
+    case DELETE:
+
+        // TODO
+
         break;
 }
 
-echo json_encode($data);
+echo json_encode($entity);

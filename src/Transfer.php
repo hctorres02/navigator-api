@@ -4,6 +4,15 @@ namespace HCTorres02\Navigator;
 
 class Transfer
 {
+    public const ALLOWED_DOWNLOAD = ['php', 'html'];
+
+    public static function isDownloadable(string $path): bool
+    {
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+
+        return in_array($extension, self::ALLOWED_DOWNLOAD);
+    }
+
     public static function download(string $path): void
     {
         $filename = basename($path);
@@ -13,7 +22,6 @@ class Transfer
             'Content-Description: File Transfer',
             "Content-Disposition: attachment; filename={$filename}",
             "Content-Length: {$filesize}",
-            'Content-Type: application/octet-stream',
             'Expires: 0',
             'Pragma: public',
         ];

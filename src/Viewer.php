@@ -6,14 +6,28 @@ use stdClass;
 
 class Viewer
 {
-    public static function get(string $path): stdClass
+    public const ALLOWED_VIEWER = [
+        'css', 'csv', 'htm', 'html', 'js',
+        'json', 'php', 'sql', 'txt', 'xml'
+    ];
+
+    public static function canViewFile(string $path): bool
     {
-        $data = new stdClass;
-        $data->path = $path;
+        if (!is_readable($path)) {
+            return false;
+        }
+
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+
+        return in_array($extension, self::ALLOWED_VIEWER);
+    }
+
+    public static function get(string $path): string
+    {
+        $data = '';
 
         ob_start();
-        $data->contents = file_get_contents($data->path);
-        $data->isWritable = is_writable($data->path);
+        $data = file_get_contents($path);
         ob_flush();
 
         return $data;
