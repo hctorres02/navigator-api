@@ -63,16 +63,19 @@ switch ($request_method) {
     case POST:
 
         // TODO
+        $entity->data = ['fake data'];
 
         break;
     case PUT:
 
         // TODO
+        $entity->data = ['fake data'];
 
         break;
     case DELETE:
 
         // TODO
+        $entity->data = ['fake data'];
 
         break;
 }

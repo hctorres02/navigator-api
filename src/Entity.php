@@ -8,6 +8,7 @@ class Entity extends stdClass
 {
     public $originalPath;
     public $path;
+    public $dirname;
     public $isDir;
     public $isDownloadable;
     public $isReadable;
@@ -18,6 +19,7 @@ class Entity extends stdClass
     {
         $this->originalPath = Helper::pathWrapper($drive, $path);
         $this->path = realpath($this->originalPath);
+        $this->dirname = dirname($this->originalPath);
         $this->isDir = is_dir($this->path);
         $this->isDownloadable = !$this->isDir && Transfer::isDownloadable($this->path);
         $this->isReadable = is_readable($this->path);
