@@ -6,55 +6,75 @@ use stdClass;
 
 class Browser
 {
-    public static function canReadDir(string $path): bool
+    public const DENY_PATHS = [
+        //'c:/windows'
+    ];
+
+    public static function canRead(string $path): bool
     {
-        return $path && is_readable($path);
+        if (!is_readable($path)) {
+            return false;
+        }
+
+        $denied = false;
+
+        foreach (self::DENY_PATHS as $denypath) {
+            $realdenypath = realpath($denypath);
+            $len = strlen($realdenypath);
+            $sub = substr($path, 0, $len);
+            $denied = $sub == $realdenypath;
+
+            if ($denied) {
+                break;
+            }
+        }
+
+        return !$denied;
     }
 
-    public static function fetch(
-        string $path,
-        string $filter = NULL,
-        array $excluded = ['.']
-    ): array {
+    public static function fetch(string $path, array $excluded = ['.'])
+    {
         $data = new stdClass;
         $data->path = $path;
-        $data->filter = $filter;
         $data->excluded = $excluded;
 
-        return self::coordinator($data);
+        foreach (self::coordinator($data) as $filename) {
+            $entity = self::createEntity($filename, $data->path);
+
+            if ($entity) {
+                $data->items[] = $entity;
+            }
+        }
+
+        return $data->items;
     }
 
-    private static function coordinator(stdClass $data): array
+    private static function coordinator(stdClass $data)
     {
-        $result = array();
-        $items = array_diff(scandir($data->path), $data->excluded);
+        $handle = opendir($data->path);
 
-        foreach ($items as $item) {
-            $entity = self::createEntity($item, $data->path);
-            $filterFail = $data->filter && $data->filter != $entity->type;
-
-            if (!$entity || $filterFail) {
+        while (($fileItem = readdir($handle)) != FALSE) {
+            if (in_array($fileItem, $data->excluded)) {
                 continue;
             }
 
-            $result[$entity->type][] = $entity;
+            yield $fileItem;
         }
 
-        return $result;
+        closedir($handle);
     }
 
-    private static function createEntity(string $name, string $path): ?stdClass
+    private static function createEntity(string $filename, string $path): ?Entity
     {
-        $realpath = realpath($path . DIRECTORY_SEPARATOR . $name);
+        $realpath = realpath($path . DIRECTORY_SEPARATOR . $filename);
 
         if (!$realpath) {
             return null;
         }
 
-        $entity = new stdClass;
-        $entity->name = $name;
-        $entity->path = $realpath;
-        $entity->type = filetype($realpath);
+        $entity = new Entity($realpath, NULL, TRUE);
+        $entity->name = $filename;
+        unset($entity->data);
 
         return $entity;
     }

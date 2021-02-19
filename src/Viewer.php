@@ -2,8 +2,6 @@
 
 namespace HCTorres02\Navigator;
 
-use stdClass;
-
 class Viewer
 {
     public const ALLOWED_VIEWER = [
@@ -11,7 +9,7 @@ class Viewer
         'json', 'php', 'sql', 'txt', 'xml'
     ];
 
-    public static function canViewFile(string $path): bool
+    public static function canView(string $path): bool
     {
         if (!is_readable($path)) {
             return false;
@@ -22,9 +20,9 @@ class Viewer
         return in_array($extension, self::ALLOWED_VIEWER);
     }
 
-    public static function get(string $path): string
+    public static function get(string $path): ?string
     {
-        $data = '';
+        $data = null;
 
         ob_start();
         $data = file_get_contents($path);

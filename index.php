@@ -42,8 +42,8 @@ if (!$entity->path) {
 
 if (
     !$entity->isReadable
-    || !$entity->isDownloadable && $download_mode
-    || !$entity->isWritable && $request_method == POST
+    || $download_mode && !$entity->isDownloadable
+    || $request_method == PUT && !$entity->isWritable
 ) {
     Errors::dispatch(403);
 }
@@ -61,16 +61,20 @@ switch ($request_method) {
 
         break;
     case POST:
+        try {
+            // TODO
+            $entity->data = ['fake data'];
 
-        // TODO
-        $entity->data = ['fake data'];
+            Errors::dispatch(201);
+        } catch (Exception $e) {
+            Errors::dispatch(409);
+        }
 
         break;
     case PUT:
-
         try {
             $data = json_decode(file_get_contents('php://input'));
-            file_put_contents($data->path, $data->data);
+            Writer::put($data);
 
             Errors::dispatch(204);
         } catch (Exception $e) {
@@ -79,9 +83,14 @@ switch ($request_method) {
 
         break;
     case DELETE:
+        try {
+            // TODO
+            $entity->data = ['fake data'];
 
-        // TODO
-        $entity->data = ['fake data'];
+            Errors::dispatch(204);
+        } catch (Exception $e) {
+            Errors::dispatch(409);
+        }
 
         break;
 }

@@ -4,7 +4,7 @@ namespace HCTorres02\Navigator;
 
 class Transfer
 {
-    public const ALLOWED_DOWNLOAD = ['php', 'html'];
+    public const ALLOWED_DOWNLOAD = ['php'];
 
     public static function isDownloadable(string $path): bool
     {
