@@ -68,8 +68,14 @@ switch ($request_method) {
         break;
     case PUT:
 
-        // TODO
-        $entity->data = ['fake data'];
+        try {
+            $data = json_decode(file_get_contents('php://input'));
+            file_put_contents($data->path, $data->data);
+
+            Errors::dispatch(204);
+        } catch (Exception $e) {
+            Errors::dispatch(409);
+        }
 
         break;
     case DELETE:

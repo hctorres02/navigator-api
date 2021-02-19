@@ -33,7 +33,7 @@ class Browser
             $entity = self::createEntity($item, $data->path);
             $filterFail = $data->filter && $data->filter != $entity->type;
 
-            if (!$entity->type || $filterFail) {
+            if (!$entity || $filterFail) {
                 continue;
             }
 
@@ -43,16 +43,18 @@ class Browser
         return $result;
     }
 
-    private static function createEntity(string $name, string $path): stdClass
+    private static function createEntity(string $name, string $path): ?stdClass
     {
         $realpath = realpath($path . DIRECTORY_SEPARATOR . $name);
-        $entity = new stdClass;
 
-        if ($realpath) {
-            $entity->name = $name;
-            $entity->path = $realpath;
-            $entity->type = filetype($realpath);
+        if (!$realpath) {
+            return null;
         }
+
+        $entity = new stdClass;
+        $entity->name = $name;
+        $entity->path = $realpath;
+        $entity->type = filetype($realpath);
 
         return $entity;
     }
