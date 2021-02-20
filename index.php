@@ -3,38 +3,55 @@
 require 'vendor/autoload.php';
 
 use HCTorres02\Navigator\{
-    Browser,
     Entity,
     Errors,
+    Helper
+};
+use HCTorres02\Navigator\Core\{
+    Browser,
     Transfer,
     Viewer,
-    Writer,
+    Writer
 };
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: https://navigator-ui.gear.host');
 
-define('GET', 'GET');
-define('POST', 'POST');
-define('PUT', 'PUT');
-define('DELETE', 'DELETE');
+define('DRIVE', urldecode(filter_input(INPUT_GET, 'drive')));
+define('PATH', urldecode(filter_input(INPUT_GET, 'path')));
+define('REQUEST_METHOD', filter_input(INPUT_SERVER, 'REQUEST_METHOD'));
 
-$methods = [GET, POST, DELETE, PUT];
-$request_method = filter_input(INPUT_SERVER, 'REQUEST_METHOD');
-
-if (!in_array($request_method, $methods)) {
-    Errors::dispatch(405);
-}
-
-$drive = urldecode(filter_input(INPUT_GET, 'drive'));
-$path = urldecode(filter_input(INPUT_GET, 'path'));
-$download_mode = filter_input(INPUT_GET, 'download', FILTER_VALIDATE_BOOLEAN);
-
-if (!$drive) {
+if (!DRIVE) {
     Errors::dispatch(400);
 }
 
-$entity = new Entity($drive, $path);
+if (!in_array(REQUEST_METHOD, Helper::ALLOWED_METHODS)) {
+    Errors::dispatch(405);
+}
+
+define('DOWNLOAD_MODE', REQUEST_METHOD == GET && filter_input(INPUT_GET, 'download', FILTER_VALIDATE_BOOLEAN));
+define('CREATE_MODE', REQUEST_METHOD == POST);
+define('PUT_MODE', REQUEST_METHOD == PUT);
+define('DELETE_MODE', REQUEST_METHOD == DELETE);
+
+$pathWrapper = Helper::pathWrapper(DRIVE, PATH);
+$entity = new Entity($pathWrapper);
+
+if (CREATE_MODE) {
+    if ($entity->path) {
+        Errors::dispatch(409);
+    }
+
+    $create_type = filter_input(INPUT_GET, 'type');
+
+    if (!PATH || !$create_type || !in_array($create_type, Helper::ALLOWED_CREATE_TYPES)) {
+        Errors::dispatch(400);
+    }
+
+    $entity->path = $pathWrapper;
+    $entity->isReadable = Browser::canRead($pathWrapper, true);
+    $entity->isDir = Helper::typeIsFolder($create_type);
+}
 
 if (!$entity->path) {
     Errors::dispatch(404);
@@ -42,15 +59,15 @@ if (!$entity->path) {
 
 if (
     !$entity->isReadable
-    || $download_mode && !$entity->isDownloadable
-    || $request_method == PUT && !$entity->isWritable
+    || DOWNLOAD_MODE && $entity->isDir
+    || PUT_MODE && !$entity->isWritable
 ) {
     Errors::dispatch(403);
 }
 
-switch ($request_method) {
+switch (REQUEST_METHOD) {
     case GET:
-        if ($download_mode) {
+        if (DOWNLOAD_MODE) {
             Transfer::download($entity->path);
             return;
         }
@@ -63,7 +80,9 @@ switch ($request_method) {
     case POST:
         try {
             // TODO
-            $entity->data = ['fake data'];
+            if (Writer::create($entity)) {
+                $entity = new Entity($entity->path);
+            }
 
             Errors::dispatch(201);
         } catch (Exception $e) {

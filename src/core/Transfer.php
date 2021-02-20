@@ -1,10 +1,16 @@
 <?php
 
-namespace HCTorres02\Navigator;
+namespace HCTorres02\Navigator\Core;
 
 class Transfer
 {
-    public const ALLOWED_DOWNLOAD = ['php'];
+    public const ALLOWED_DOWNLOAD = [
+        'gif', 'jpg', 'jpeg', 'png', 'zip'
+    ];
+
+    public const ALLOWED_UPLOAD = [
+        'gif', 'jpg', 'jpeg', 'png', 'zip'
+    ];
 
     public static function isDownloadable(string $path): bool
     {

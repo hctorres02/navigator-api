@@ -1,28 +1,37 @@
 <?php
 
-namespace HCTorres02\Navigator;
+namespace HCTorres02\Navigator\Core;
 
 use stdClass;
+use HCTorres02\Navigator\Entity;
 
 class Browser
 {
     public const DENY_PATHS = [
-        //'c:/windows'
+        'c:/windows',
+        'c:/adb'
     ];
 
-    public static function canRead(string $path): bool
+    public static function canRead(string $path, bool $skipNative = false): bool
     {
-        if (!is_readable($path)) {
+        if (!$skipNative && !is_readable($path)) {
             return false;
         }
 
         $denied = false;
 
         foreach (self::DENY_PATHS as $denypath) {
-            $realdenypath = realpath($denypath);
-            $len = strlen($realdenypath);
+            $denypath = realpath($denypath);
+            $denypath = str_replace('\\', '/', $denypath);
+            $denypath = strtolower($denypath);
+
+            $path = str_replace('\\', '/', $path);
+            $path = strtolower($path);
+
+            $len = strlen($denypath);
             $sub = substr($path, 0, $len);
-            $denied = $sub == $realdenypath;
+
+            $denied = $sub == $denypath;
 
             if ($denied) {
                 break;
@@ -72,7 +81,7 @@ class Browser
             return null;
         }
 
-        $entity = new Entity($realpath, NULL, TRUE);
+        $entity = new Entity($realpath);
         $entity->name = $filename;
         unset($entity->data);
 

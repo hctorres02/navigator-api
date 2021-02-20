@@ -3,6 +3,12 @@
 namespace HCTorres02\Navigator;
 
 use stdClass;
+use HCTorres02\Navigator\Core\{
+    Browser,
+    Transfer,
+    Viewer,
+    Writer
+};
 
 class Entity extends stdClass
 {
@@ -15,18 +21,17 @@ class Entity extends stdClass
     public $isWritable;
     public $data;
 
-    public function __construct(string $drive, string $path = NULL, bool $ignorePath = FALSE)
+    public function __construct(string $path)
     {
-        $originalPath = Helper::pathWrapper($drive, $path, $ignorePath);
-        $realpath = realpath($originalPath);
-        $dirname = dirname($realpath);
-        $name = basename($realpath);
-        $isDir = is_dir($realpath);
-        $isReadable = $isDir ? Browser::canRead($realpath) : Viewer::canView($realpath);
-        $isDownloadable = !$isDir && $isReadable && Transfer::isDownloadable($realpath);
-        $isWritable = is_writable($this->path);
+        $path = realpath($path);
+        $dirname = dirname($path);
+        $name = basename($path);
+        $isDir = is_dir($path);
+        $isReadable = $isDir ? Browser::canRead($path) : Viewer::canView($path);
+        $isDownloadable = !$isDir && $isReadable && Transfer::isDownloadable($path);
+        $isWritable = $isDir ? is_writable($path) : Writer::canWrite($path);
 
-        $this->path = $realpath;
+        $this->path = $path;
         $this->dirname = $dirname;
         $this->name = $name;
         $this->isDir = $isDir;
