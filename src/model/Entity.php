@@ -1,6 +1,6 @@
 <?php
 
-namespace HCTorres02\Navigator;
+namespace HCTorres02\Navigator\Model;
 
 use stdClass;
 use HCTorres02\Navigator\Core\{

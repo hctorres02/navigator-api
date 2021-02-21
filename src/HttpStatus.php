@@ -2,7 +2,9 @@
 
 namespace HCTorres02\Navigator;
 
-class Errors
+use HCTorres02\Navigator\Model\Entity;
+
+class HttpStatus
 {
     public static function dispatch(int $code, Entity $entity = null)
     {

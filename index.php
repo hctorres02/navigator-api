@@ -3,10 +3,10 @@
 require 'vendor/autoload.php';
 
 use HCTorres02\Navigator\{
-    Entity,
-    Errors,
+    HttpStatus,
     Helper
 };
+use HCTorres02\Navigator\Model\Entity;
 use HCTorres02\Navigator\Core\{
     Browser,
     Transfer,
@@ -14,7 +14,7 @@ use HCTorres02\Navigator\Core\{
     Writer
 };
 
-header('Content-Type: application/json; charset=utf-8');
+header('Content-Type: application/json; charset=UTF-8');
 header('Access-Control-Allow-Origin: https://navigator-ui.gear.host');
 
 define('DRIVE', urldecode(filter_input(INPUT_GET, 'drive')));
@@ -22,11 +22,11 @@ define('PATH', urldecode(filter_input(INPUT_GET, 'path')));
 define('REQUEST_METHOD', filter_input(INPUT_SERVER, 'REQUEST_METHOD'));
 
 if (!DRIVE) {
-    Errors::dispatch(400);
+    HttpStatus::dispatch(400);
 }
 
 if (!in_array(REQUEST_METHOD, Helper::ALLOWED_METHODS)) {
-    Errors::dispatch(405);
+    HttpStatus::dispatch(405);
 }
 
 define('DOWNLOAD_MODE', REQUEST_METHOD == GET && filter_input(INPUT_GET, 'download', FILTER_VALIDATE_BOOLEAN));
@@ -39,30 +39,34 @@ $entity = new Entity($pathWrapper);
 
 if (CREATE_MODE) {
     if ($entity->path) {
-        Errors::dispatch(409);
+        HttpStatus::dispatch(409);
     }
 
     $create_type = filter_input(INPUT_GET, 'type');
 
-    if (!PATH || !$create_type || !in_array($create_type, Helper::ALLOWED_CREATE_TYPES)) {
-        Errors::dispatch(400);
+    if (
+        !PATH
+        || !$create_type
+        || !in_array($create_type, Helper::ALLOWED_CREATE_TYPES)
+    ) {
+        HttpStatus::dispatch(400);
     }
 
     $entity->path = $pathWrapper;
     $entity->isReadable = Browser::canRead($pathWrapper, true);
-    $entity->isDir = Helper::typeIsFolder($create_type);
+    $entity->isDir = Helper::typeIsDirectory($create_type);
 }
 
 if (!$entity->path) {
-    Errors::dispatch(404);
+    HttpStatus::dispatch(404);
 }
 
 if (
     !$entity->isReadable
-    || DOWNLOAD_MODE && $entity->isDir
+    || DOWNLOAD_MODE && !$entity->isDownloadable
     || PUT_MODE && !$entity->isWritable
 ) {
-    Errors::dispatch(403);
+    HttpStatus::dispatch(403);
 }
 
 switch (REQUEST_METHOD) {
@@ -79,25 +83,30 @@ switch (REQUEST_METHOD) {
         break;
     case POST:
         try {
-            // TODO
             if (Writer::create($entity)) {
-                $entity = new Entity($entity->path);
+                HttpStatus::dispatch(201, new Entity($entity->path));
             }
 
-            Errors::dispatch(201);
+            HttpStatus::dispatch(500);
         } catch (Exception $e) {
-            Errors::dispatch(409);
+            HttpStatus::dispatch(409);
         }
 
         break;
     case PUT:
         try {
-            $data = json_decode(file_get_contents('php://input'));
-            Writer::put($data);
+            $data = json_decode(file_get_contents('php://input'), true);
 
-            Errors::dispatch(204);
+            if (!$data || !isset($data['data'])) {
+                HttpStatus::dispatch(400);
+            }
+
+            $entity->data = $data['data'];
+            Writer::put($entity);
+
+            HttpStatus::dispatch(204);
         } catch (Exception $e) {
-            Errors::dispatch(409);
+            HttpStatus::dispatch(409);
         }
 
         break;
@@ -106,9 +115,9 @@ switch (REQUEST_METHOD) {
             // TODO
             $entity->data = ['fake data'];
 
-            Errors::dispatch(204);
+            HttpStatus::dispatch(204);
         } catch (Exception $e) {
-            Errors::dispatch(409);
+            HttpStatus::dispatch(409);
         }
 
         break;

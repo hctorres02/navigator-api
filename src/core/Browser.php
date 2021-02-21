@@ -3,7 +3,7 @@
 namespace HCTorres02\Navigator\Core;
 
 use stdClass;
-use HCTorres02\Navigator\Entity;
+use HCTorres02\Navigator\Model\Entity;
 
 class Browser
 {

@@ -2,7 +2,7 @@
 
 namespace HCTorres02\Navigator\Core;
 
-use HCTorres02\Navigator\Entity;
+use HCTorres02\Navigator\Model\Entity;
 
 class Writer
 {

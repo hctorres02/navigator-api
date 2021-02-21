@@ -14,10 +14,10 @@ class Helper
     ];
 
     public const ALLOWED_CREATE_TYPES = [
-        self::FILE, self::FOLDER
+        self::DIRECTORY, self::FILE
     ];
 
-    private const FOLDER = 'folder';
+    private const DIRECTORY = 'directory';
     private const FILE = 'file';
 
     public static function pathWrapper(string $drive, string $path = ''): string
@@ -28,8 +28,8 @@ class Helper
         return $wrapped;
     }
 
-    public static function typeIsFolder(string $type)
+    public static function typeIsDirectory(string $type)
     {
-        return $type === self::FOLDER;
+        return $type === self::DIRECTORY;
     }
 }
