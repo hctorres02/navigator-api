@@ -2,6 +2,8 @@
 
 namespace HCTorres02\Navigator\Core;
 
+use HCTorres02\Navigator\Helper;
+
 class Viewer
 {
     public const ALLOWED_VIEWER = [
@@ -15,9 +17,16 @@ class Viewer
             return false;
         }
 
-        $extension = pathinfo($path, PATHINFO_EXTENSION);
+        $allowed = false;
 
-        return in_array($extension, self::ALLOWED_VIEWER);
+        foreach (self::ALLOWED_VIEWER as $needle) {
+            if (Helper::endsWith($path, $needle)) {
+                $allowed = true;
+                break;
+            }
+        }
+
+        return $allowed;
     }
 
     public static function get(string $path): ?string

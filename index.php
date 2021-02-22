@@ -83,8 +83,20 @@ switch (REQUEST_METHOD) {
         break;
     case POST:
         try {
+            $data = json_decode(file_get_contents('php://input'), true);
+
+            if (!$entity->isDir && (!$data || !isset($data['data']))) {
+                HttpStatus::dispatch(400);
+            }
+
+            if (!$entity->isDir) {
+                $entity->data = $data['data'];
+            }
+
             if (Writer::create($entity)) {
-                HttpStatus::dispatch(201, new Entity($entity->path));
+                $created_entity = new Entity($entity->path, $entity->data);
+
+                HttpStatus::dispatch(201, $created_entity);
             }
 
             HttpStatus::dispatch(500);

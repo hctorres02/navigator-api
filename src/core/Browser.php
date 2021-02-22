@@ -83,7 +83,6 @@ class Browser
 
         $entity = new Entity($realpath);
         $entity->name = $filename;
-        unset($entity->data);
 
         return $entity;
     }

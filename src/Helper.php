@@ -32,4 +32,15 @@ class Helper
     {
         return $type === self::DIRECTORY;
     }
+
+    public static function endsWith(string $haystack, string $needle)
+    {
+        $length = strlen($needle);
+
+        if (!$length) {
+            return true;
+        }
+
+        return substr($haystack, -$length) == $needle;
+    }
 }
