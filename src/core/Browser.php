@@ -7,10 +7,7 @@ use HCTorres02\Navigator\Model\Entity;
 
 class Browser
 {
-    public const DENY_PATHS = [
-        'c:/windows',
-        'c:/adb'
-    ];
+    public const DENY_PATHS = [];
 
     public static function canRead(string $path, bool $skipNative = false): bool
     {
@@ -46,6 +43,7 @@ class Browser
         $data = new stdClass;
         $data->path = $path;
         $data->excluded = $excluded;
+        $data->items = [];
 
         foreach (self::coordinator($data) as $filename) {
             $entity = self::createEntity($filename, $data->path);

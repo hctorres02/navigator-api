@@ -15,7 +15,7 @@ use HCTorres02\Navigator\Core\{
 };
 
 header('Content-Type: application/json; charset=UTF-8');
-header('Access-Control-Allow-Origin: https://navigator-ui.gear.host');
+header('Access-Control-Allow-Origin: *');
 
 define('DRIVE', urldecode(filter_input(INPUT_GET, 'drive')));
 define('PATH', urldecode(filter_input(INPUT_GET, 'path')));
@@ -77,7 +77,7 @@ switch (REQUEST_METHOD) {
         }
 
         $entity->data = $entity->isDir
-            ? Browser::fetch($entity->path)
+            ? Browser::fetch($entity->path, ['.', '..'])
             : Viewer::get($entity->path);
 
         break;
